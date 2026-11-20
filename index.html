@@ -1,0 +1,82 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>خمن الرقم</title>
+<meta name="description" content="لعبة خمن الرقم: فكرت في رقم من 1 إلى 100، هل تقدر تخمنه؟">
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--text:#1f2430;--muted:#6b7280;--accent:#d9480f;--ok:#2b8a3e;--border:#e5e1d8;box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#16181d;--card:#21242c;--text:#f1f1ef;--muted:#9aa1ad;--accent:#ff922b;--ok:#69db7c;--border:#333844}}
+:root[data-theme="dark"]{--bg:#16181d;--card:#21242c;--text:#f1f1ef;--muted:#9aa1ad;--accent:#ff922b;--ok:#69db7c;--border:#333844}
+*{box-sizing:border-box}
+html,body{height:100%;margin:0}
+body{background:var(--bg);color:var(--text);font-family:"Segoe UI",Tahoma,Arial,sans-serif;display:flex;align-items:center;justify-content:center;padding:16px}
+.card{background:var(--card);border:1px solid var(--border);border-radius:20px;padding:28px 22px;width:100%;max-width:380px;text-align:center}
+h1{margin:0 0 6px;font-size:28px}
+p{margin:0}
+.sub{color:var(--muted);margin-bottom:18px}
+#msg{min-height:56px;font-size:20px;font-weight:700;margin:14px 0;display:flex;align-items:center;justify-content:center}
+input{width:100%;font-size:26px;text-align:center;padding:12px;border-radius:12px;border:2px solid var(--border);background:var(--bg);color:var(--text);font-family:inherit}
+input:focus{outline:none;border-color:var(--accent)}
+button{width:100%;margin-top:12px;font-size:18px;font-family:inherit;font-weight:700;padding:13px;border:0;border-radius:12px;background:var(--accent);color:#fff;cursor:pointer}
+button.alt{background:transparent;color:var(--accent);border:2px solid var(--accent)}
+.stats{display:flex;justify-content:space-around;color:var(--muted);font-size:15px;margin-top:16px}
+.stats b{color:var(--text)}
+.win{color:var(--ok)}
+.lose{color:var(--accent)}
+.pun{background:var(--bg);border:2px dashed var(--accent);border-radius:12px;padding:14px;margin-bottom:6px;font-size:18px;line-height:1.7}
+.hist{margin-top:12px;color:var(--muted);font-size:14px;min-height:20px;word-break:break-word}
+</style>
+</head>
+<body>
+<main class="card">
+  <h1>🎯 خمن الرقم</h1>
+  <p class="sub">فكرت في رقم من 1 إلى 100. هل تقدر تخمنه؟</p>
+  <input id="g" type="number" inputmode="numeric" min="1" max="100" placeholder="اكتب تخمينك" autocomplete="off">
+  <button id="go">خمّن</button>
+  <div id="msg" aria-live="polite">ابدأ بأي رقم</div>
+  <div id="pun" class="pun" style="display:none"></div>
+  <button id="again" class="alt" style="display:none">العب تاني</button>
+  <div class="hist" id="hist"></div>
+  <div class="stats">
+    <span>المحاولات: <b id="tries">0</b> / 10</span>
+    <span>أفضل نتيجة: <b id="best">-</b></span>
+  </div>
+</main>
+<script>
+(function(){
+  var secret, tries, over, guesses;
+  var MAX=10;
+  var PUN=['قلّد صوت حيوان لمدة 10 ثواني 🐔','اعمل 10 تمارين ضغط 💪','احكي نكتة، ولو محدش ضحك تعيدها 😂','غنّي أول بيت من أي أغنية بصوت عالي 🎤','ارقص 20 ثانية بدون موسيقى 💃','اتكلم بصوت روبوت لمدة دقيقة 🤖','اعمل كوباية شاي أو قهوة لكل الموجودين ☕','احكي موقف محرج حصل لك 🙈','قول اسمك بالعكس 3 مرات بسرعة','قف على رجل واحدة وعد لحد 20 🦩','امدح كل واحد موجود بجملة حلوة 🌟','قلّد واحد من الموجودين والباقي يخمنوا مين 🎭','ممنوع تضحك دقيقة والباقي يحاولوا يضحكوك 😐'];
+  var $=function(i){return document.getElementById(i)};
+  var g=$('g'), msg=$('msg'), go=$('go'), again=$('again');
+  var best=null;
+  try{var b=localStorage.getItem('guess-best'); if(b) best=parseInt(b,10)}catch(e){}
+  function showBest(){$('best').textContent=best?best:'-'}
+  function start(){
+    secret=Math.floor(Math.random()*100)+1; tries=0; over=false; guesses=[];
+    $('tries').textContent=0; $('hist').textContent='';
+    msg.className=''; msg.textContent='ابدأ بأي رقم'; $('pun').style.display='none';
+    again.style.display='none'; go.style.display='block';
+    g.value=''; g.disabled=false; g.focus(); showBest();
+  }
+  function lose(){
+    over=true; msg.className='lose';
+    msg.textContent='😅 خسرت! الرقم كان '+secret;
+    var p=$('pun'); p.textContent='العقاب: '+PUN[Math.floor(Math.random()*PUN.length)];
+    p.style.display='block';
+    g.disabled=true; go.style.display='none'; again.style.display='block';
+  }
+  function play(){
+    if(over) return;
+    var n=parseInt(g.value,10);
+    if(isNaN(n)||n<1||n>100){msg.textContent='اكتب رقم من 1 إلى 100';return}
+    tries++; guesses.push(n);
+    $('tries').textContent=tries;
+    $('hist').textContent='تخميناتك: '+guesses.join('، ');
+    if(n===secret){
+      over=true; msg.className='win';
+      msg.textContent='🎉 برافو! الرقم '+secret+' في '+tries+' محاولة';
+      var wp=$('pun'); wp.textContent='🏆 مبروك! اطلب من خصمك أي طلب وهو لازم ينفذه';
+      wp.style.display='b
